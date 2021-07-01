@@ -2,7 +2,7 @@
 OpenApi/Swagger documentation of an API built whilst cursing Software Engineering 7th semester - UFMS
 
 ## What was Built
-A mobile app that has a manual of steps to follow according to our customers's requirements, that needed a backend api to consume, wich provides authentication through Bearer tokens - JWT, a database set of medicines with their properties and user management.
+A mobile app that has a manual of steps to follow according to our customers's requirements, that needed a back-end api to consume, wich provides authentication through Bearer tokens - JWT, a database set of medicines with their properties and user management.
 
 ### Some of the features includes
 - Email sending on user activation/deactivation using Sendgrid
@@ -19,16 +19,16 @@ Finally we start building the software.
 #### Our team decided to use Agile Methodologies
 - Scrum, daily meetings, sprint reviews, sprint planning
 
-#### For the Frontend
+#### For the Front-end
 - Vue.js (Quasar framework)
 
-#### For the Backend
+#### For the Back-end
 - An API built in Node.js using Express
 - http://infomed-api.herokuapp.com/
 
 #### Testing
 - We use jest
 
-I created this repository with the intention of practicing english writing and Swagger/OpenAPI documentation.
-Once I was responsible for the Backend API, I thought we should have a way for the frontend know what requisitions should be made and what to expect from it.
-For authoral rights I can't share the source code
+
+I created this repository with the intention of practicing English writing and Swagger/OpenAPI documentation. 
+Once I was responsible for the Back-end API, I thought we should have a way to the front-end know what requisitions should be made and what to expect from it. For authorial rights I can't share the application source code but the .yaml file.
