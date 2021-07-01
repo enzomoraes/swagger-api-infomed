@@ -1,0 +1,882 @@
+openapi: '3.0.2'
+info:
+  title: Infomed API
+  description: '
+    Infomed API desenvolvida no núcleo de práticas da FACOM - UFMS.
+    Essa api utiliza Tokens Bearer JWT para segurança. Primeiro faça o login para ter acesso aos recursos
+    '
+  version: '1.0'
+  contact:
+    name: Enzo Moraes Pereira
+    email: enzomoraes12@hotmail.com
+servers:
+  - url: https://infomed-api.herokuapp.com/
+    description: Servidor de produção
+
+components:
+  securitySchemes:
+    Bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    BadRequest:
+      description: Requisição inválida
+    UnauthorizedError:
+      description: Token inválido ou não está presente
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example:  Token inválido ou não está presente
+                description:  Token inválido ou não está presente
+    IsNotAdmin:
+      description: Você não possui autorização
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Você não possui autorização
+                description: Você não possui autorização
+    InternalServerError:
+      description: Erro interno
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Internal server error
+                description: Erro interno
+    EmailError:
+      description: Não foi possível enviar o email
+      content: 
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Não foi possível enviar o email
+                description: Erro ao enviar email
+
+paths:
+  /auth:
+    post:
+      tags:
+        - Auth
+      summary: Login
+      description: '
+        Usuário deve fazer login passando suas credenciais no corpo da requisição.
+        Se as credenciais forem válidas, retorna no corpo da resposta o token para
+        ser passado no header para acessar os endpoints da api.
+      '
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - codigoProfissional
+                - senha
+              properties:
+                codigoProfissional:
+                  type: string
+                  example: '1564321'
+                  description: 'Código do profissional'
+                senha:
+                  type: string
+                  example: '1564321'
+                  description: 'Senha'
+      responses:
+        '200':
+          description: Login Realizado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc0FkbWluIjp0cnVlLCJjb2RpZ29Qcm9maXNzaW9uYWwiOiIxMjM0NTYiLCJpYXQiOjE2MjQ1ODE2NTMsImV4cCI6MTYyNDY2ODA1M30.dCtLqkm-l1-5g4owG-8DMrTdfx2wE7NqUGxu1vr-VNk'
+                    description: Token Bearer
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Usuário inativo; Senha inválida
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 'Senha inválida'
+                    description: Erro
+        '404':
+          description: Usuário não encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 'Usuário não encontrado'
+                    description: Erro
+  /auth/recuperar-senha:
+    post:
+      tags:
+        - Auth
+      summary: Recuperar Senha
+      description: '
+        Deve-se passar o email cadastrado. Após a requisição ser concluída um token é enviado para o email inserido
+        que deve ser usado para redefinir a senha.
+      '
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  example: 'email@exemplo.com'
+                  description: 'Email do usuário'
+      responses:
+        '204':
+          description: Um email com as instruções foi enviado
+        '500':
+          description: Não foi possível enviar o email
+  /auth/redefinir-senha:
+    post:
+      tags:
+        - Auth
+      summary: Redefinir Senha
+      description: '
+        Deve-se passar o email cadastrado. Após a requisição ser concluída um token é enviado para o email inserido
+        que deve ser usado para redefinir a senha.
+      '
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - token
+                - senhaNova
+              properties:
+                email:
+                  type: string
+                  example: 'email@exemplo.com'
+                  description: 'Email do usuário'
+                token: 
+                  type: string
+                  example: '72891f4a16126831505ba5c0e3e7eb03754cd359'
+                  description: 'Token para recuperação da senha'
+                senhaNova:
+                  type: string
+                  example: '123456'
+                  description: 'Nova senha'
+      responses:
+        '200':
+          description: Senha alterada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Senha alterada com sucesso
+                    description: Mensagem de sucesso
+        '400':
+          description: Token de redefinição de senha inválido; Erro na requisição
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Token de redefinição de senha inválido
+                    description: Token de redefinição de senha inválido
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Usuário não encontrado; Usuário não possui token de redefinição
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 'Usuário não possui token de redefinição de senha. Gere um novo Token'
+                    description: 'Usuário não possui token de redefinição de senha. Gere um novo Token'
+  /usuarios:
+    post:
+      tags:
+        - Usuarios
+      summary: Criar Usuário
+      description: '
+        Lista todos os usuários
+      '
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - classeProfissional
+                - codigoProfissional
+                - nomeCompleto
+                - email
+                - senha
+              properties:
+                classeProfissional:
+                  type: string
+                  example: 'CRF'
+                  description: 'Classe do profissional'
+                codigoProfissional:
+                  type: string
+                  example: '1564321'
+                  description: 'Código do profissional'
+                nomeCompleto:
+                  type: string
+                  example: 'João da Silva'
+                  description: 'Nome completo do usuário'
+                email:
+                  type: string
+                  example: 'email@email.com'
+                  description: 'Email do usuário'
+                senha:
+                  type: string
+                  example: '1564321'
+                  description: 'Senha'
+
+      responses:
+        '200':
+          description: Criar usuário
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Usuário criado
+                    description: Mensagem de sucesso
+                  usuario:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                        example: 1
+                        description: Identificador
+                      classe_profissional:
+                        type: string
+                        example: CRF
+                        description: Classe do profissional
+                      codigo_profissional:
+                        type: string
+                        example: 951321045
+                        description: Código do profissional
+                      nome_completo:
+                        type: string
+                        example: Usuário administrador
+                        description: Nome do Usuário
+                      email:
+                        type: string
+                        example: email@email.com
+                        description: Email do Usuário
+                      is_admin:
+                        type: boolean
+                        example: true
+                        description: É administrador?
+                      data_inclusao:
+                        type: string
+                        example: '2021-06-08T00:00:00.000Z'
+                        description: Data de inclusão
+                      is_ativo:
+                        type: boolean
+                        example: true
+                        description: Está ativo
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Usuarios
+      summary: Lista Usuários
+      description: '
+        Lista todos os usuários
+      '
+      responses:
+        '200':
+          description: Busca realizada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Busca concluída
+                    description: Mensagem de sucesso
+                  usuarios:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                          example: 1
+                          description: Identificador
+                        classe_profissional:
+                          type: string
+                          example: CRF
+                          description: Classe do profissional
+                        codigo_profissional:
+                          type: string
+                          example: 951321045
+                          description: Código do profissional
+                        nome_completo:
+                          type: string
+                          example: Usuário administrador
+                          description: Nome do Usuário
+                        email:
+                          type: string
+                          example: email@email.com
+                          description: Email do Usuário
+                        is_admin:
+                          type: boolean
+                          example: true
+                          description: É administrador?
+                        data_inclusao:
+                          type: string
+                          example: '2021-06-08T00:00:00.000Z'
+                          description: Data de inclusão
+                        is_ativo:
+                          type: boolean
+                          example: true
+                          description: Está ativo
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'                  
+        '403':
+          $ref: '#/components/responses/IsNotAdmin'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /usuarios/{id}:
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Usuarios
+      summary: Busca Usuário por id
+      description: '
+        Retorna o usuário buscado
+      '
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: number
+          required: true
+      
+      responses:
+        '200':
+          description: Busca realizada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Busca concluída
+                    description: Mensagem de sucesso
+                  usuario:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                        example: 1
+                        description: Identificador
+                      classe_profissional:
+                        type: string
+                        example: CRF
+                        description: Classe do profissional
+                      codigo_profissional:
+                        type: string
+                        example: 951321045
+                        description: Código do profissional
+                      nome_completo:
+                        type: string
+                        example: Usuário administrador
+                        description: Nome do Usuário
+                      email:
+                        type: string
+                        example: email@email.com
+                        description: Email do Usuário
+                      is_admin:
+                        type: boolean
+                        example: true
+                        description: É administrador?
+                      data_inclusao:
+                        type: string
+                        example: '2021-06-08T00:00:00.000Z'
+                        description: Data de inclusão
+                      is_ativo:
+                        type: boolean
+                        example: true
+                        description: Está ativo
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/IsNotAdmin'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      security:
+        - Bearer: []
+      tags:
+        - Usuarios
+      summary: Remove Usuário por id
+      description: '
+        Remove o usuário
+      '
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: number
+          required: true
+      
+      responses:
+        '204':
+          description: Usuário removido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Usuário removido
+                    description: Usuário removido com sucesso
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/IsNotAdmin'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      
+
+    put:
+      security:
+        - Bearer: []
+      tags:
+        - Usuarios
+      summary: Atualiza Usuário por id
+      description: '
+        Retorna o usuário
+      '
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: number
+          required: true
+    
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - classeProfissional
+                - codigoProfissional
+                - nomeCompleto
+                - email
+                - isAdmin
+              properties:
+                classeProfissional:
+                  type: string
+                  example: 'CRF'
+                  description: 'Classe do profissional'
+                codigoProfissional:
+                  type: string
+                  example: '1564321'
+                  description: 'Código do profissional'
+                nomeCompleto:
+                  type: string
+                  example: 'João da Silva'
+                  description: 'Nome completo do usuário'
+                email:
+                  type: string
+                  example: 'email@email.com'
+                  description: 'Email do usuário'
+                isAdmin:
+                  type: boolean
+                  example: true
+                  description: 'É administrador?'
+      
+      responses:
+        '200':
+          description: Usuário atualizado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Usuário atualizado
+                    description: Mensagem de sucesso
+                  usuario:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                        example: 1
+                        description: Identificador
+                      classe_profissional:
+                        type: string
+                        example: CRF
+                        description: Classe do profissional
+                      codigo_profissional:
+                        type: string
+                        example: 951321045
+                        description: Código do profissional
+                      nome_completo:
+                        type: string
+                        example: Usuário administrador
+                        description: Nome do Usuário
+                      email:
+                        type: string
+                        example: email@email.com
+                        description: Email do Usuário
+                      is_admin:
+                        type: boolean
+                        example: true
+                        description: É administrador?
+                      data_inclusao:
+                        type: string
+                        example: '2021-06-08T00:00:00.000Z'
+                        description: Data de inclusão
+                      is_ativo:
+                        type: boolean
+                        example: true
+                        description: Está ativo
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/IsNotAdmin'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+  /usuarios/usuarios-pendentes:
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Usuarios
+      summary: Usuários pendentes
+      description: '
+        Lista todos os usuários inativos
+      '
+      responses:
+        '200':
+          description: Busca realizada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Busca concluída
+                    description: Mensagem de sucesso
+                  usuarios:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                          example: 1
+                          description: Identificador
+                        classe_profissional:
+                          type: string
+                          example: CRF
+                          description: Classe do profissional
+                        codigo_profissional:
+                          type: string
+                          example: 951321045
+                          description: Código do profissional
+                        nome_completo:
+                          type: string
+                          example: Usuário administrador
+                          description: Nome do Usuário
+                        email:
+                          type: string
+                          example: email@email.com
+                          description: Email do Usuário
+                        is_admin:
+                          type: boolean
+                          example: true
+                          description: É administrador?
+                        data_inclusao:
+                          type: string
+                          example: '2021-06-08T00:00:00.000Z'
+                          description: Data de inclusão
+                        is_ativo:
+                          type: boolean
+                          example: false
+                          description: Está ativo
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'                  
+        '403':
+          $ref: '#/components/responses/IsNotAdmin'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /usuarios/por-codigo-profissional/{codigoProfissional}:
+    get:
+      security:
+        - Bearer: []
+      
+      parameters:
+        - in: path
+          name: codigoProfissional
+          schema:
+            type: number
+          required: true
+      
+      tags:
+        - Usuarios
+      summary: Retorna o usuário buscado
+      description: '
+        Busca por código do profissional
+      '
+      responses:
+        '200':
+          description: Busca realizada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Busca concluída
+                    description: Mensagem de sucesso
+                  usuarios:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                        example: 1
+                        description: Identificador
+                      classe_profissional:
+                        type: string
+                        example: CRF
+                        description: Classe do profissional
+                      codigo_profissional:
+                        type: string
+                        example: 951321045
+                        description: Código do profissional
+                      nome_completo:
+                        type: string
+                        example: Usuário administrador
+                        description: Nome do Usuário
+                      email:
+                        type: string
+                        example: email@email.com
+                        description: Email do Usuário
+                      is_admin:
+                        type: boolean
+                        example: true
+                        description: É administrador?
+                      data_inclusao:
+                        type: string
+                        example: '2021-06-08T00:00:00.000Z'
+                        description: Data de inclusão
+                      is_ativo:
+                        type: boolean
+                        example: false
+                        description: Está ativo
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'                  
+        '403':
+          $ref: '#/components/responses/IsNotAdmin'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /usuarios/ativar/{id}:
+    post:
+      security:
+        - Bearer: []
+      tags:
+        - Usuarios
+      summary: Ativa um usuário
+      description: '
+        Ativar um usuário
+      '
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: number
+          required: true
+
+      responses:
+        '200':
+          description: Usuário ativado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Usuário ativado
+                    description: Mensagem de sucesso
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'                  
+        '403':
+          $ref: '#/components/responses/IsNotAdmin'
+        '500':
+          $ref: '#/components/responses/EmailError'
+
+  /usuarios/desativar/{id}:
+    post:
+      security:
+        - Bearer: []
+      tags:
+        - Usuarios
+      summary: Desativa um usuário
+      description: '
+        Desativar um usuário
+      '
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: number
+          required: true
+
+      responses:
+        '200':
+          description: Usuário Desativado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Usuário Desativado
+                    description: Mensagem de sucesso
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'                  
+        '403':
+          $ref: '#/components/responses/IsNotAdmin'
+        '500':
+          $ref: '#/components/responses/EmailError'
+
+  /medicamentos:
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Medicamentos
+      summary: Lista os Medicamentos
+      description: '
+        Lista todos os medicamentos cadastrados
+      '
+      responses:
+        '200':
+          description: Busca realizada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Busca concluída
+                    description: Mensagem de sucesso
+                  medicamentos:
+                    type: array
+                    items:
+                      type: object
+                      properties: 
+                        id:
+                          type: number
+                          example: 1
+                          description: Identificador
+                        tratamento:
+                          type: string
+                          example: Diclofenaco sódico
+                          description: Tratamento
+                        apresentacao: 
+                          type: string
+                          example: 25 mg/ml – injetável
+                          description: Apresentação
+                        posologia:
+                          type: string
+                          example: 75 mg - 8/12h
+                          description: Posologia
+                        cuidados:
+                          type: string
+                          example: '
+                            Interações: Diuréticos: reduz os efeitos do antihipertensivo e aumenta o risco de nefrotoxicidade e aumento da pressão arterial - Anticoagulantes / Corticóides: Aumenta os riscos de sangramentos gastrointestinais e também aumenta o risco de nefrotoxicidade e ototoxicidade (IBUPROFENO,2016)
+                          '
+                          description: Cuidados
+                        observacao: 
+                          type: string
+                          example: AINES não Seletivo Cox1 e Cox 2
+                          description: Observação
+                        categoria:
+                          type: string
+                          example: Antiinflamatórios não esteroidais - AINES
+                          description: Categoria
+                        sufixo:
+                          type: string
+                          example: AINES
+                          description: Sufixo
+                        categoria_macro:
+                          type: string
+                          example: Analgésicos não opióides
+                          description: Categoria Macro
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/IsNotAdmin'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
