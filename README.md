@@ -9,7 +9,7 @@ A mobile app that has a manual of steps to follow according to our customers's r
 - Authentication Using JWT
 
 ## Why was Built
-In my two last semesters in my Software enginnering course, we have somthing we call 'Núcleo de práticas de software', one translation would be 'Software practices', where we are matched with a real customer whom presents it's proposal for a software that fulfills its necessities.
+The two last semesters in my Software enginnering course, we have somthing we call 'Núcleo de práticas de software', one translation would be 'Software practices', where we are matched with a real customer whom presents it's proposal for a software that fulfills its necessities.
 Then, we contact the customer and come up with the requirements.
 Then, our team got to choose what technologies we will use, what processes we will do and so on.
 Finally we start building the software.
