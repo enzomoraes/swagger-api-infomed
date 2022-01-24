@@ -1,5 +1,5 @@
 # Swagger/OpenApi 3.0 API INFOMED
-OpenApi/Swagger documentation of an API built whilst cursing Software Engineering 7th semester - UFMS
+OpenApi/Swagger documentation of an API built whilst in 7th semester Software Engineering - UFMS
 
 ## What was Built
 A mobile app that has a manual of steps to follow according to our customers's requirements, that needed a back-end api to consume, wich provides authentication through Bearer tokens - JWT, a database set of medicines with their properties and user management.
